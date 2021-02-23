@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 from aiogram.dispatcher.filters.state import StatesGroup, State
@@ -71,7 +72,9 @@ async def user_info(message, state, file_name):
 
     subject = f'{group["name"][1]}{data["group_num"]} {data["student"]}'
     mail_sender.sendmsg(subject, file_name)
+    os.remove(f'documents/{file_name}')
     await message.answer('Файл успешно отправлен')
+
 
 
 
