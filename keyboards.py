@@ -24,10 +24,12 @@ def group_num_keyboard(group_index):
     else:
         for i in range(0, group['count'], 3):
             btn1 = btn(f'{group["name"]}-{i+1}-{json_file["year"]}', f'groupnum_{i+1}')
-            btn3 = btn(f'{group["name"]}-{i+3}-{json_file["year"]}', f'groupnum_{i+3}')
-            if i != group['count']-1:
+            if i < 24:
                 btn2 = btn(f'{group["name"]}-{i+2}-{json_file["year"]}', f'groupnum_{i+2}')
-            markup.add(btn1, btn2, btn3)
+                btn3 = btn(f'{group["name"]}-{i + 3}-{json_file["year"]}', f'groupnum_{i + 3}')
+                markup.add(btn1, btn2, btn3)
+            else:
+                markup.add(btn1)
     return markup
 
 
