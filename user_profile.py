@@ -144,6 +144,7 @@ async def file_handler(message, state):
     document = message.document
     if re.search(r'.py$', document['file_name']):
         file = (await bot.get_file(document.file_id))
+        print(file)
         file_name = str((await file.download()).name).split('/')[1]
         print(file_name)
         await user_info(message, state, file_name)

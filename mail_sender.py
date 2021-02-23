@@ -1,8 +1,8 @@
 import mimetypes
 import os
 from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import smtplib
 import secret_token
 
@@ -24,10 +24,10 @@ def prepare_file(filename):
         if ctype is None or encoding is not None:  # Если тип файла не определяется
             ctype = 'application/octet-stream'  # Будем использовать общий тип
         maintype, subtype = ctype.split('/', 1)  # Получаем тип и подтип
-        if maintype == 'text':  # Если текстовый файл
-            with open(filepath, encoding='utf-8') as fp:  # Открываем файл для чтения
-                file = MIMEText(fp.read(), _subtype=subtype)  # Используем тип MIMEText
-                fp.close()
+        with open(filepath, 'rb') as fp:
+            file = MIMEBase(maintype, subtype)  # Используем общий MIME-тип
+            file.set_payload(fp.read())  # Добавляем содержимое общего типа (полезную нагрузку)
+            fp.close()
             encoders.encode_base64(file)  # Содержимое должно кодироваться как Base64
         file.add_header('Content-Disposition', 'attachment', filename=filename)  # Добавляем заголовки
         return file
