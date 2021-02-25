@@ -24,6 +24,11 @@ class Sending(StatesGroup):
     try_to_out = State()
     exit = State()
 
+async def delete_msg(message):
+    try:
+        await bot.delete_message(message.chat.id, message.message_id)
+    except:
+        pass
 
 async def begin(message, state: FSMContext):
     await state.update_data(is_second=False)
@@ -37,25 +42,25 @@ async def prepare_group_type(message):
 
 
 async def prepare_group_num(message, group_type):
-    await bot.delete_message(message.chat.id, message.message_id)
+    await delete_msg(message)
     await message.answer('Выбери номер группы', reply_markup=group_num_keyboard(group_type))
     await Sending.group_num.set()
 
 
 async def prepare_student_num(message):
-    await bot.delete_message(message.chat.id, message.message_id)
+    await delete_msg(message)
     await message.answer('Выбери номер в списке', reply_markup=student_num_keyboard())
     await Sending.student_num.set()
 
 
 async def prepare_file(message):
-    await bot.delete_message(message.chat.id, message.message_id)
+    await delete_msg(message)
     await message.answer('Прикрепите файл')
     await Sending.wait_file.set()
 
 
 async def msg_out(message):
-    await bot.delete_message(message.chat.id, message.message_id)
+    await delete_msg(message)
     await message.answer('Вы действительно хотите выйти?',
                          reply_markup=yes_no_keyboard())
     await Sending.try_to_out.set()
@@ -101,6 +106,7 @@ async def group_type_handler(call, state):
     print(f'is_second: {is_second}')
 
     if is_second and (await is_group_num_okay(group_type)):
+        await delete_msg(message)
         await Sending.is_right.set()
         await user_info(message, state)
     else:
@@ -115,6 +121,7 @@ async def group_num_handler(call, state):
     await state.update_data(step='group_num')
     is_second = (await state.get_data())['is_second']
     if is_second:
+        await delete_msg(message)
         await Sending.is_right.set()
         await user_info(message, state)
     else:
@@ -129,6 +136,7 @@ async def student_num_handler(call, state):
     await state.update_data(step='student_num')
     is_second = (await state.get_data())['is_second']
     if is_second:
+        await delete_msg(message)
         await Sending.is_right.set()
         await user_info(message, state)
     else:
@@ -196,10 +204,8 @@ async def whats_wrong_handler(call, state):
     elif call.data == 'none':
         await Sending.is_right.set()
         await user_info(message, state)
-    try:
-        await bot.delete_message(message.chat.id, message.message_id)
-    except:
-        pass
+    await delete_msg(message)
+
 
 @dp.callback_query_handler(lambda call: call.data == 'send_more', state='*')
 async def seng_more_handler(call, state):
