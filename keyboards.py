@@ -37,8 +37,8 @@ def group_num_keyboard(group_index):
 def student_num_keyboard():
     markup = InlineKeyboardMarkup(row_width=5)
     for i in range(1, 40, 5):
-        markup.add(btn(i, 'student_' + str(i)), btn(i + 1, 'student_' + str(i + 1)),
-                   btn(i + 2, 'student_' + str(i + 2)), btn(i + 3, 'student_' + str(i + 3)), btn(i + 4, 'student_' + str(i + 4)))
+        btns = (btn(j, f'student_{j}') for j in range(i, i+5))
+        markup.add(*btns)
     return markup
 
 
@@ -52,12 +52,16 @@ def yes_no_keyboard():
 def info_keyboard():
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(btn("Направление", 'group_type'), btn("Номер группы", 'group_num'))
-    markup.add(btn("Номер в списке", 'student_num'), btn("Выход", 'none'))
+    markup.add(btn("Номер в списке", 'student_num'), btn("Назад", 'none'))
     return markup
-
 
 
 def out_keyboard():
     markup = InlineKeyboardMarkup()
     markup.add(btn("Выход", 'out'))
+    return markup
+
+def send_more_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.add(btn("Отправить еще", 'send_more'))
     return markup
