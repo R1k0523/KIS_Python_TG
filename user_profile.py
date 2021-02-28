@@ -1,6 +1,10 @@
+import asyncio
 import json
 import os
 import re
+import queue
+import threading
+import time
 
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
@@ -8,6 +12,8 @@ import mail_sender
 from keyboards import *
 from misc import bot, dp
 from aiogram.dispatcher import FSMContext
+
+from testing import testing
 
 
 def user_info_text(group_type, group_num, year, student_num):
@@ -72,11 +78,10 @@ async def msg_out(message):
 
 async def user_info(message, state):
     data = await state.get_data()
-
     json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
     group = json_file['group_list'][int(data["group_type"])]
     await message.answer(user_info_text(group["name"], data["group_num"], json_file['year'], data["student"]),
-                         reply_markup=yes_no_keyboard())
+                         reply_markup=yes_no_test_keyboard())
 
 
 async def send_info(message, state):
@@ -177,7 +182,24 @@ async def file_handler(message, state):
         await message.answer('Расширение файла не ".py"')
 
 
-# ПРОВЕРКА ИНФОРМАЦИИ
+async def testing_thread(state):
+    data = await state.get_data()
+    json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
+    group_json = json_file['group_list'][int(data["group_type"])]
+    group = f'{group_json["name"][1]}{data["group_num"]}'
+    q = queue.Queue()  # костыль для возврата значения из треда
+    t = threading.Thread(target=testing, args=(group, int(data["student"]), data['file_name'][:-3], q))
+    t.start()
+    t.join()
+    return q.get()
+
+
+def prettify(func_test_info: dict):
+    resp = 'Результат тестирования:'
+    for func in func_test_info.keys():
+        resp += f'\n-- {func} --\n{func_test_info[func]}'
+    return resp
+
 
 @dp.callback_query_handler(lambda call: True, state=Sending.is_right)
 async def is_right_handler(call, state):
@@ -189,6 +211,15 @@ async def is_right_handler(call, state):
         await message.answer("Что нужно изменить?", reply_markup=info_keyboard())
         await Sending.whats_wrong.set()
         await bot.delete_message(message.chat.id, message.message_id)
+    elif call.data == 'test':
+        await bot.delete_message(message.chat.id, message.message_id)
+        msg = await message.answer('Проходит тестирование')
+        await asyncio.sleep(5)
+        await bot.delete_message(msg.chat.id, msg.message_id)
+        result = await testing_thread(state)
+        await message.answer(prettify(result) if result else 'Произошла ошибка')
+        await Sending.is_right.set()
+        await user_info(message, state)
 
 
 @dp.callback_query_handler(lambda call: True, state=Sending.whats_wrong)
@@ -212,6 +243,5 @@ async def whats_wrong_handler(call, state):
 @dp.callback_query_handler(lambda call: call.data == 'send_more', state='*')
 async def seng_more_handler(call, state):
     message = call.message
-    print('keeeeek')
     await begin(message, state)
     await bot.delete_message(message.chat.id, message.message_id)

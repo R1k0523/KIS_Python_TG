@@ -20,13 +20,13 @@ def group_num_keyboard(group_index):
     group = json_file['group_list'][int(group_index)]
     if group['count'] < 11:
         for i in range(group['count']):
-            markup.add(btn(f'{group["name"]}-{i+1}-{json_file["year"]}', f'groupnum_{i+1}'))
+            markup.add(btn(f'{group["name"]}-{(i+1):02d}-{json_file["year"]}', f'groupnum_{i+1}'))
     else:
         for i in range(0, group['count'], 3):
-            btn1 = btn(f'{group["name"]}-{i+1}-{json_file["year"]}', f'groupnum_{i+1}')
+            btn1 = btn(f'{group["name"]}-{(i+1):02d}-{json_file["year"]}', f'groupnum_{i+1}')
             if i < 24:
-                btn2 = btn(f'{group["name"]}-{i+2}-{json_file["year"]}', f'groupnum_{i+2}')
-                btn3 = btn(f'{group["name"]}-{i + 3}-{json_file["year"]}', f'groupnum_{i + 3}')
+                btn2 = btn(f'{group["name"]}-{(i+2):02d}-{json_file["year"]}', f'groupnum_{i+2}')
+                btn3 = btn(f'{group["name"]}-{(i+3):02d}-{json_file["year"]}', f'groupnum_{i + 3}')
                 markup.add(btn1, btn2, btn3)
             else:
                 markup.add(btn1)
@@ -47,6 +47,12 @@ def yes_no_keyboard():
     markup.add(btn("Да", 'yes'), btn("Нет", 'no'))
     return markup
 
+
+def yes_no_test_keyboard():
+    markup = InlineKeyboardMarkup()
+    markup.add(btn("Да", 'yes'), btn("Нет", 'no'))
+    markup.add(btn("Тест (Бета-версия)", 'test'))
+    return markup
 
 
 def info_keyboard():
