@@ -1,0 +1,13 @@
+{
+  "letter": "f",
+  "tasks_list": [
+    {
+      "folder_name": "first",
+      "count": 4
+    },
+    {
+      "folder_name": "second",
+      "count": 3
+    }
+  ]
+}

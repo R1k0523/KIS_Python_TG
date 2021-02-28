@@ -9,10 +9,12 @@ from keyboards import *
 from misc import bot, dp
 from aiogram.dispatcher import FSMContext
 
+
 def user_info_text(group_type, group_num, year, student_num):
     return f'Группа: {group_type}-{group_num}-{year}\n' \
            f'Номер в группе: {student_num}' \
            f'\n\nВсе ли верно?'
+
 
 class Sending(StatesGroup):
     group_type = State()
@@ -24,11 +26,13 @@ class Sending(StatesGroup):
     try_to_out = State()
     exit = State()
 
+
 async def delete_msg(message):
     try:
         await bot.delete_message(message.chat.id, message.message_id)
     except:
         pass
+
 
 async def begin(message, state: FSMContext):
     await state.update_data(is_second=False)
@@ -66,8 +70,6 @@ async def msg_out(message):
     await Sending.try_to_out.set()
 
 
-
-
 async def user_info(message, state):
     data = await state.get_data()
 
@@ -89,8 +91,6 @@ async def send_info(message, state):
     await Sending.exit.set()
 
 
-
-
 @dp.callback_query_handler(lambda call: call.data.split('_')[0] == 'grouptype', state=Sending.group_type)
 async def group_type_handler(call, state):
     async def is_group_num_okay(group_type):
@@ -98,6 +98,7 @@ async def group_type_handler(call, state):
         group = json_file['group_list'][int(group_type)]
         group_num = int((await state.get_data())['group_num'])
         return not group['count'] or group_num <= group['count']
+
     message = call.message
     group_type = call.data.split('_')[1]
     await state.update_data(group_type=group_type)
@@ -175,7 +176,8 @@ async def file_handler(message, state):
     else:
         await message.answer('Расширение файла не ".py"')
 
-#ПРОВЕРКА ИНФОРМАЦИИ
+
+# ПРОВЕРКА ИНФОРМАЦИИ
 
 @dp.callback_query_handler(lambda call: True, state=Sending.is_right)
 async def is_right_handler(call, state):
