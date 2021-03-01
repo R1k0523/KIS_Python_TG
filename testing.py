@@ -1,6 +1,9 @@
+import asyncio
 import importlib
 import json
+import queue
 from pathlib import Path
+from kthread import KThread
 
 
 class TestException(AssertionError):
@@ -8,14 +11,14 @@ class TestException(AssertionError):
         self.info = info
 
 
-def func_info(func_name, args, predicted_answer, got_answer):
+def __func_info__(func_name, args, predicted_answer, got_answer):
     return f'Имя функции: {func_name}\n' \
-           f'Аргументы: {args}\n' \
-           f'Ожидаемый результат: {predicted_answer}\n' \
-           f'Полученный результат: {got_answer}'
+           f'Аргументы:\n{args}\n' \
+           f'Ожидаемый результат:\n{predicted_answer}\n' \
+           f'Полученный результат:\n{got_answer}\n'
 
 
-def testing(group, student_num, file_name, q):
+def __testing__(group, student_num, file_name, q):
     tasks = json.loads(Path('tasks.json').read_text(encoding='utf-8'))
     test_info = {}
     try:
@@ -34,18 +37,27 @@ def testing(group, student_num, file_name, q):
                             res = tested_func(*test[0])
                         if type(res) is float:
                             if '%.2e' % res != '%.2e' % test[1]:
-                                raise TestException(func_info(func_name, test[0], test[1], res))
+                                raise TestException(__func_info__(func_name, test[0], test[1], res))
                         else:
                             if res != test[1]:
-                                raise TestException(func_info(func_name, test[0], test[1], res))
+                                raise TestException(__func_info__(func_name, test[0], test[1], res))
                     test_info[func_name] = 'Тест пройден'
                 except TestException as e:
                     test_info[func_name] = f'Тест не пройден\nПричина:\n{e.info}'
+                except AttributeError:
+                    pass
                 except Exception as e:
                     test_info[func_name] = f'Тест не пройден\nПричина:\n{e}'
     except Exception as e:
         test_info['Перед тестированием'] = str(e)
-
-
     q.put(test_info)
 
+
+async def testing(group, student_num, file_name):
+    q = queue.Queue()
+    t = KThread(target=__testing__, args=(group, student_num, file_name, q))
+    t.start()
+    await asyncio.sleep(5)
+    if t.is_alive():
+        t.kill()
+    return q.get()

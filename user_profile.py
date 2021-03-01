@@ -1,10 +1,5 @@
-import asyncio
-import json
 import os
 import re
-import queue
-import threading
-import time
 
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
@@ -17,7 +12,7 @@ from testing import testing
 
 
 def user_info_text(group_type, group_num, year, student_num):
-    return f'Группа: {group_type}-{group_num}-{year}\n' \
+    return f'Группа: {group_type}-{int(group_num):02d}-{year}\n' \
            f'Номер в группе: {student_num}' \
            f'\n\nВсе ли верно?'
 
@@ -182,16 +177,13 @@ async def file_handler(message, state):
         await message.answer('Расширение файла не ".py"')
 
 
-async def testing_thread(state):
+async def make_tests(state):
     data = await state.get_data()
     json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
     group_json = json_file['group_list'][int(data["group_type"])]
     group = f'{group_json["name"][1]}{data["group_num"]}'
-    q = queue.Queue()  # костыль для возврата значения из треда
-    t = threading.Thread(target=testing, args=(group, int(data["student"]), data['file_name'][:-3], q))
-    t.start()
-    t.join()
-    return q.get()
+
+    return await testing(group, int(data["student"]), data['file_name'][:-3])
 
 
 def prettify(func_test_info: dict):
@@ -206,20 +198,24 @@ async def is_right_handler(call, state):
     message = call.message
     if call.data == 'yes':
         await send_info(message, state)
-        await bot.delete_message(message.chat.id, message.message_id)
+        await delete_msg(message)
     elif call.data == 'no':
         await message.answer("Что нужно изменить?", reply_markup=info_keyboard())
         await Sending.whats_wrong.set()
-        await bot.delete_message(message.chat.id, message.message_id)
+        await delete_msg(message)
     elif call.data == 'test':
-        await bot.delete_message(message.chat.id, message.message_id)
+        await delete_msg(message)
         msg = await message.answer('Проходит тестирование')
-        await asyncio.sleep(5)
-        await bot.delete_message(msg.chat.id, msg.message_id)
-        result = await testing_thread(state)
+        result = await make_tests(state)
+        await delete_msg(msg)
         await message.answer(prettify(result) if result else 'Произошла ошибка')
         await Sending.is_right.set()
         await user_info(message, state)
+    elif call.data == 'go_out':
+        await delete_msg(message)
+        os.remove(f'documents/{(await state.get_data())["file_name"]}')
+        await message.answer('Хотите отправить новый файл?', reply_markup=send_more_keyboard())
+        await Sending.exit.set()
 
 
 @dp.callback_query_handler(lambda call: True, state=Sending.whats_wrong)
