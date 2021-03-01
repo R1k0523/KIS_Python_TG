@@ -36,6 +36,7 @@ async def delete_msg(message):
 
 
 async def begin(message, state: FSMContext):
+    print(f'begin: {message.from_user.id}')
     await state.update_data(is_second=False)
     await state.update_data(group_type=None)
     await prepare_group_type(message)
@@ -59,6 +60,7 @@ async def prepare_student_num(message):
 
 
 async def prepare_file(message):
+    print(f'prepare_file: {message.from_user.id}')
     await delete_msg(message)
     await message.answer('Прикрепите файл')
     await Sending.wait_file.set()
@@ -72,6 +74,7 @@ async def msg_out(message):
 
 
 async def user_info(message, state):
+    print(f'user_info: {message.from_user.id}')
     data = await state.get_data()
     json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
     group = json_file['group_list'][int(data["group_type"])]
@@ -80,6 +83,7 @@ async def user_info(message, state):
 
 
 async def send_info(message, state):
+    print(f'send_info: {message.from_user.id}')
     data = await state.get_data()
 
     json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
@@ -93,6 +97,8 @@ async def send_info(message, state):
 
 @dp.callback_query_handler(lambda call: call.data.split('_')[0] == 'grouptype', state=Sending.group_type)
 async def group_type_handler(call, state):
+    print(f'group_type_handler: {call.from_user.id}')
+
     async def is_group_num_okay(group_type):
         json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
         group = json_file['group_list'][int(group_type)]
@@ -104,7 +110,6 @@ async def group_type_handler(call, state):
     await state.update_data(group_type=group_type)
     await state.update_data(step='group_type')
     is_second = (await state.get_data())['is_second']
-    print(f'is_second: {is_second}')
 
     if is_second and (await is_group_num_okay(group_type)):
         await delete_msg(message)
@@ -197,13 +202,16 @@ def prettify(func_test_info: dict):
 async def is_right_handler(call, state):
     message = call.message
     if call.data == 'yes':
+        print(f'is_right_handler (yes): {call.from_user.id}')
         await send_info(message, state)
         await delete_msg(message)
     elif call.data == 'no':
+        print(f'is_right_handler (no): {call.from_user.id}')
         await message.answer("Что нужно изменить?", reply_markup=info_keyboard())
         await Sending.whats_wrong.set()
         await delete_msg(message)
     elif call.data == 'test':
+        print(f'is_right_handler (test): {call.from_user.id}')
         await delete_msg(message)
         msg = await message.answer('Проходит тестирование')
         result = await make_tests(state)
@@ -212,6 +220,7 @@ async def is_right_handler(call, state):
         await Sending.is_right.set()
         await user_info(message, state)
     elif call.data == 'go_out':
+        print(f'is_right_handler (go_out): {call.from_user.id}')
         await delete_msg(message)
         os.remove(f'documents/{(await state.get_data())["file_name"]}')
         await message.answer('Хотите отправить новый файл?', reply_markup=send_more_keyboard())
@@ -222,15 +231,20 @@ async def is_right_handler(call, state):
 async def whats_wrong_handler(call, state):
     message = call.message
     if call.data == 'group_type':
+        print(f'whats_wrong_handler (group_type): {call.from_user.id}')
         await prepare_group_type(message)
     elif call.data == 'group_num':
+        print(f'whats_wrong_handler (group_num): {call.from_user.id}')
         group_type = (await state.get_data())['group_type']
         await prepare_group_num(message, group_type)
     elif call.data == 'student_num':
+        print(f'whats_wrong_handler (student_num): {call.from_user.id}')
         await prepare_student_num(message)
     elif call.data == 'file':
+        print(f'whats_wrong_handler (file): {call.from_user.id}')
         await prepare_file(message)
     elif call.data == 'none':
+        print(f'whats_wrong_handler (none): {call.from_user.id}')
         await Sending.is_right.set()
         await user_info(message, state)
     await delete_msg(message)
@@ -239,5 +253,6 @@ async def whats_wrong_handler(call, state):
 @dp.callback_query_handler(lambda call: call.data == 'send_more', state='*')
 async def seng_more_handler(call, state):
     message = call.message
+    print(f'seng_more_handler): {call.from_user.id}')
     await begin(message, state)
     await bot.delete_message(message.chat.id, message.message_id)
