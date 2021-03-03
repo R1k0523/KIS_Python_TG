@@ -256,9 +256,9 @@ async def seng_more_handler(call, state):
     print(f'seng_more_handler): {call.from_user.id}')
     data = (await state.get_data())
     await bot.delete_message(message.chat.id, message.message_id)
-    if data['group_type']:
-        if data['group_num']:
-            if data['student']:
+    if 'group_type' in data:
+        if 'group_num' in data:
+            if 'student' in data:
                 await prepare_file(message)
             else:
                 await prepare_student_num(message)
