@@ -194,7 +194,7 @@ async def make_tests(state):
 def prettify(func_test_info: dict):
     resp = 'Результат тестирования:'
     for func in func_test_info.keys():
-        resp += f'\n-- {func} --\n{func_test_info[func]}'
+        resp += f'\n-- {func} -- {func_test_info[func]}'
     return resp
 
 
@@ -254,5 +254,15 @@ async def whats_wrong_handler(call, state):
 async def seng_more_handler(call, state):
     message = call.message
     print(f'seng_more_handler): {call.from_user.id}')
-    await begin(message, state)
+    data = (await state.get_data())
     await bot.delete_message(message.chat.id, message.message_id)
+    if data['group_type']:
+        if data['group_num']:
+            if data['student']:
+                await prepare_file(message)
+            else:
+                await prepare_student_num(message)
+        else:
+            await prepare_group_num(message, data['group_type'])
+    else:
+        await begin(message, state)

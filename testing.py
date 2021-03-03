@@ -41,13 +41,13 @@ def __testing__(group, student_num, file_name, q):
                         else:
                             if res != test[1]:
                                 raise TestException(__func_info__(func_name, test[0], test[1], res))
-                    test_info[func_name] = 'Тест пройден'
+                    test_info[func_name] = '🟢\nТест пройден'
                 except TestException as e:
-                    test_info[func_name] = f'Тест не пройден\nПричина:\n{e.info}'
+                    test_info[func_name] = f'🔴\nТест не пройден\nПричина:\n{e.info}'
                 except AttributeError:
                     pass
                 except Exception as e:
-                    test_info[func_name] = f'Тест не пройден\nПричина:\n{e}'
+                    test_info[func_name] = f'🔴\nТест не пройден\nПричина:\n{e}'
     except Exception as e:
         test_info['Перед тестированием'] = str(e)
     q.put(test_info)
