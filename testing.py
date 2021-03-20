@@ -2,6 +2,7 @@ import asyncio
 import importlib
 import json
 import queue
+import time
 from pathlib import Path
 from kthread import KThread
 
@@ -9,6 +10,9 @@ from kthread import KThread
 class TestException(AssertionError):
     def __init__(self, info):
         self.info = info
+
+
+
 
 
 def __func_info__(func_name, args, predicted_answer, got_answer):
@@ -61,3 +65,18 @@ async def testing(group, student_num, file_name):
     if t.is_alive():
         t.kill()
     return q.get()
+
+
+# def temp_testing(group, student_num, file_name):
+#     file_name = __prepare_file__(file_name)
+#     q = queue.Queue()
+#     t = KThread(target=__testing__, args=(group, student_num, file_name, q))
+#     t.start()
+#     time.sleep(5)
+#     if t.is_alive():
+#         t.kill()
+#     return q.get()
+
+if __name__ == '__main__':
+    # print(temp_testing('К6', 16, 'main'))
+    pass

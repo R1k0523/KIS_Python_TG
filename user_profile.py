@@ -82,15 +82,30 @@ async def user_info(message, state):
                          reply_markup=yes_no_test_keyboard())
 
 
+def __prepare_file__(file_name):
+    file_name = file_name[0:-3]
+    f2 = open(f"documents/{file_name}1.py", "w")
+    f2.write('import math\n')
+    with open(f'documents/{file_name}.py', 'r') as f1:
+        for line in f1.readlines():
+            if 'import' in line:
+                line = line.replace('import', 'pass #')
+            if 'environ' not in line:
+                f2.write(line)
+    f2.close()
+    return f"{file_name}1.py"
+
+
 async def send_info(message, state):
     print(f'send_info: {message.from_user.id}')
     data = await state.get_data()
-
+    file_name = data['file_name']
     json_file = json.loads(Path('groups.json').read_text(encoding='utf-8'))
     group = json_file['group_list'][int(data["group_type"])]
     subject = f'{group["name"][1]}{data["group_num"]} {data["student"]}'
-    mail_sender.sendmsg(subject, data["file_name"])
-    os.remove(f'documents/{data["file_name"]}')
+    mail_sender.sendmsg(subject, file_name)
+    os.remove(f'documents/{file_name[0:-4]}.py')
+    os.remove(f'documents/{file_name}')
     await message.answer('Файл успешно отправлен', reply_markup=send_more_keyboard())
     await Sending.exit.set()
 
@@ -175,6 +190,7 @@ async def file_handler(message, state):
     if re.search(r'.py$', document['file_name']):
         file = (await bot.get_file(document.file_id))
         file_name = str((await file.download()).name).split('/')[1]
+        file_name = __prepare_file__(file_name)
         await state.update_data(file_name=file_name)
         await Sending.is_right.set()
         await user_info(message, state)
